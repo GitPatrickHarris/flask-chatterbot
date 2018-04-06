@@ -1,11 +1,29 @@
 from flask import Flask, render_template, request
+from pymongo import MongoClient
+
 from chatterbot import ChatBot
 from chatterbot.trainers import ChatterBotCorpusTrainer
 from chatterbot.trainers import ListTrainer
 
-app = Flask(__name__)
 
-chatbot = ChatBot("Chatterbot", storage_adapter="chatterbot.storage.SQLStorageAdapter")
+app = Flask(__name__)
+client = MongoClient('localhost', 5000)
+
+
+chatbot = ChatBot(
+    "AIVA",
+    storage_adapter = "chatterbot.storage.MongoDatabaseAdapter",
+    database = "aiva_db",
+    database_uri = 'mongodb://localhost:5000',
+    logic_adapters =[
+        'chatterbot.logic.BestMatch'
+    ],
+    filters =[
+        'chatterbot.filters.RepetitiveResponseFilter'
+    ],
+    input_adapter='chatterbot.input.TerminalAdapter',
+    output_adapter='chatterbot.output.TerminalAdapter'
+) 
 
 chatbot.set_trainer(ChatterBotCorpusTrainer)
 chatbot.train("chatterbot.corpus.english")
@@ -19,7 +37,9 @@ chatbot.train([
 chatbot.train([
     "Thank you",
     "You're welcome"
-]) 
+])
+
+print('Chatbot Started: ') 
 
 @app.route("/")
 def home():
@@ -33,3 +53,4 @@ def get_bot_response():
 
 if __name__ == "__main__":
     app.run()
+
